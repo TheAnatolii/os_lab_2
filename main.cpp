@@ -2,63 +2,115 @@
 #include <pthread.h>
 #include <string>
 
+void printmass(int *ms, int size, int ln_of_one_vector)
+{
+    for (int i = 0; i < size; ++i)
+    {
+        if (i % ln_of_one_vector == 0)
+        {
+            std::cout << std::endl;
+        }
+        std::cout << ms[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
 typedef struct
 {
-    int *fst, scnd;
+    int *fst, *scnd;
     int size;
 } arguments;
 
-// void *sm(std::vector<int> &ms1, std::vector<int> &ms2, int size)
-// {
-//     for (int i = 0; i < size; ++i)
-//     {
-//         ms1[i] += ms2[i];
-//         ms2[i] = 0;
-//     }
-// }
+void *sm(void *input)
+{
+    int *ms1 = ((arguments *)input)->fst;
+    int *ms2 = ((arguments *)input)->scnd;
+    int size = ((arguments *)input)->size;
 
-void thread_work(int &data, int threads_count, int count_vectors, int ln_of_one_vector)
+    for (int i = 0; i < size; ++i)
+    {
+        ms1[i] += ms2[i];
+        ms2[i] = 0;
+    }
+    pthread_exit(0);
+}
+
+void thread_work(int *data, int threads_count, int count_vectors, int ln_of_one_vector)
 {
     pthread_t threads[threads_count];
-    int step = 1, created = 0, i = 0;
-    while (count_vectors > step && created < threads_count)
+    int step = ln_of_one_vector, created = 0, mass = count_vectors;
+
+    while (mass > 1)
     {
-        for (int i = 0; i < count_vectors; i += 2 * step)
+        int ms1[ln_of_one_vector], ms2[ln_of_one_vector];
+
+        int num_mass = mass / 2;
+
+        for (int i = 0; i < num_mass; i += 2 * step)
         {
-            // pthread_create(&threads[created], NULL, sm, data[i], data[i + 1], ln_of_one_vector);
+
+            for (int j = i; j < i + ln_of_one_vector; ++j)
+            {
+                ms1[j - i] = data[j];
+            }
+            for (int k = i + step; k < i + step + ln_of_one_vector; ++k)
+            {
+                ms2[k - i - step] = data[k];
+            }
+
+            printmass(ms1, ln_of_one_vector, ln_of_one_vector);
+            printmass(ms2, ln_of_one_vector, ln_of_one_vector);
+
+            arguments *arg = (arguments *)malloc(sizeof(arguments));
+            arg->fst = ms1;
+            arg->scnd = ms2;
+            arg->size = ln_of_one_vector;
+
+            pthread_create(&threads[created], NULL, sm, arg);
+            ++created;
         }
-        // if (count_vectors % 2 == 0)
-        // {
-        //     count_vectors /= 2;
-        // }
-        // else
-        // {
-        //     count_vectors /= 2;
-        //     ++count_vectors;
-        // }
+        if (mass % 2 == 0)
+        {
+            mass /= 2;
+        }
+        else
+        {
+            mass /= 2;
+            ++mass;
+        }
         step *= 2;
+    }
+
+    for (int i = 0; i < threads_count; ++i)
+    {
+        pthread_join(threads[i], NULL);
     }
 }
 
 int main(int argc, char *argv[])
 {
-    int count_vectors, ln_of_one_vector;
-    std::cout << "How many arrays would you like to operate with?" << std::endl;
-    std::cin >> count_vectors;
-    std::cout << "What size of vector would you like?" << std::endl;
-    std::cin >> ln_of_one_vector;
+    int count_vectors, ln_of_one_vector, count_threads;
+    // std::cout << "How many arrays would you like to operate with?" << std::endl;
+    // std::cin >> count_vectors;
+    // std::cout << "What size of vector would you like?" << std::endl;
+    // std::cin >> ln_of_one_vector;
+    // std::cout << "How many threads would you like?" << std::endl;
+    // std::cin >> count_threads;
 
-    int data[count_vectors][ln_of_one_vector];
+    count_vectors = 3;
+    ln_of_one_vector = 3;
+    count_threads = 3;
 
-    for (int i = 0; i < count_vectors; ++i)
+    int data[count_vectors * ln_of_one_vector];
+
+    for (int i = 0; i < count_vectors * ln_of_one_vector; ++i)
     {
-        for (int j = 0; j < ln_of_one_vector; ++j)
-        {
-            data[i][j] = rand() % 100;
-        }
+        data[i] = rand() % 10;
     }
 
-    int count_threads = atoi(argv[1]);
+    printmass(data, count_vectors * ln_of_one_vector, ln_of_one_vector);
 
     thread_work(data, count_threads, count_vectors, ln_of_one_vector);
+
+    printmass(data, count_vectors * ln_of_one_vector, ln_of_one_vector);
 }
