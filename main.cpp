@@ -68,6 +68,7 @@ void thread_work(int *data, int threads_count, int count_vectors, int ln_of_one_
 
             pthread_create(&threads[created], NULL, sm, arg);
             ++created;
+            free(arg);
         }
         if (mass % 2 == 0)
         {
