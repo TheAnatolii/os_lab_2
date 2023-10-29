@@ -1,6 +1,7 @@
 #include <iostream>
 #include <pthread.h>
 #include <string>
+#include <chrono>
 
 void printmass(int *ms, int size, int ln_of_one_vector)
 {
@@ -91,17 +92,13 @@ void thread_work(int *data, int threads_count, int count_vectors, int ln_of_one_
 
 int main(int argc, char *argv[])
 {
-    int count_vectors, ln_of_one_vector, count_threads;
-    // std::cout << "How many arrays would you like to operate with?" << std::endl;
-    // std::cin >> count_vectors;
-    // std::cout << "What size of vector would you like?" << std::endl;
-    // std::cin >> ln_of_one_vector;
+    int count_vectors, ln_of_one_vector, count_threads = 4;
+    std::cout << "How many arrays would you like to operate with?" << std::endl;
+    std::cin >> count_vectors;
+    std::cout << "What size of vector would you like?" << std::endl;
+    std::cin >> ln_of_one_vector;
     // std::cout << "How many threads would you like?" << std::endl;
     // std::cin >> count_threads;
-
-    count_vectors = 10;
-    ln_of_one_vector = 10;
-    count_threads = 2;
 
     int data[count_vectors * ln_of_one_vector];
 
@@ -110,9 +107,11 @@ int main(int argc, char *argv[])
         data[i] = rand() % 10;
     }
 
-    printmass(data, count_vectors * ln_of_one_vector, ln_of_one_vector);
-
+    // printmass(data, count_vectors * ln_of_one_vector, ln_of_one_vector);
+    auto start = std::chrono::high_resolution_clock::now();
     thread_work(data, count_threads, count_vectors, ln_of_one_vector);
-
-    printmass(data, ln_of_one_vector, ln_of_one_vector);
+    auto end = std::chrono::high_resolution_clock::now();
+    // printmass(data, ln_of_one_vector, ln_of_one_vector);
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    std::cout << "Программа сработала за " << duration.count() << " microseconds" << std::endl;
 }
