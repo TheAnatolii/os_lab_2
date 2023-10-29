@@ -51,8 +51,6 @@ void thread_work(int *data, int threads_count, int count_vectors, int ln_of_one_
         for (int i = 0; i < num_mass; i++)
         {
 
-            printmass(data, count_vectors * ln_of_one_vector, ln_of_one_vector);
-
             arguments *arg = (arguments *)malloc(sizeof(arguments));
             arg->arr = data;
             arg->start = pos;
@@ -63,7 +61,16 @@ void thread_work(int *data, int threads_count, int count_vectors, int ln_of_one_
             ++created;
 
             pos += 2 * step;
+            if (created == threads_count)
+            {
+                for (int q = 0; q < created; ++q)
+                {
+                    pthread_join(threads[q], NULL);
+                }
+                created = 0;
+            }
         }
+
         for (int q = 0; q < created; ++q)
         {
             pthread_join(threads[q], NULL);
@@ -92,9 +99,9 @@ int main(int argc, char *argv[])
     // std::cout << "How many threads would you like?" << std::endl;
     // std::cin >> count_threads;
 
-    count_vectors = 6;
-    ln_of_one_vector = 3;
-    count_threads = 1000;
+    count_vectors = 10;
+    ln_of_one_vector = 10;
+    count_threads = 2;
 
     int data[count_vectors * ln_of_one_vector];
 
@@ -107,5 +114,5 @@ int main(int argc, char *argv[])
 
     thread_work(data, count_threads, count_vectors, ln_of_one_vector);
 
-    printmass(data, count_vectors * ln_of_one_vector, ln_of_one_vector);
+    printmass(data, ln_of_one_vector, ln_of_one_vector);
 }
